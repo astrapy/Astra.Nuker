@@ -1,5 +1,6 @@
 # Astra.Nuker
 - Fastest Discord Server Nuker!
+- Very simple, but very fast.
 
 ## 🔥 Features
 - Fastest Server Nuke
