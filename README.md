@@ -15,7 +15,7 @@
 - Should i add role creation?
 
 ## 📹 Preview
-![preview](Video.mp4)
+[https://streamable.com/om9np8]
 
 ## ✨ Issues / Doubts
 - If you have any questions do not hesitate to enter my discord: [https://discord.gg/Un63v2truD](https://discord.gg/baMAyb4jeG)
