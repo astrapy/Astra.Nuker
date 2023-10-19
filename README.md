@@ -12,8 +12,8 @@
 3. READY!
 
 ## 📜 Updates
-- Should i add role creation?
-
+- If you have ideas you would like to be added send me an DM on discord.
+  
 ## 📹 Preview
 [https://streamable.com/om9np8]
 
